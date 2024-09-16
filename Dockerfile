@@ -20,7 +20,12 @@ RUN apt install -y \
     libgl1-mesa-dev \
     sudo \
     python3-pip \
-    udev
+    udev \
+    libxcb-icccm4 \
+    libxcb-image0 \
+    libxcb-keysyms1 \
+    libxcb-render-util0 \
+    libxkbcommon-x11-0
 
 RUN pip install black
 RUN pip install pyserial
@@ -33,7 +38,6 @@ RUN git clone https://github.com/uncrustify/uncrustify.git --branch uncrustify-0
     cmake -DCMAKE_BUILD_TYPE=Release .. && \
     make install
 
-
 ARG MTB_PACKAGE_VERSION
 ARG MTB_VERSION
 
@@ -43,22 +47,11 @@ ENV MTB_TOOLS_DIR=${HOME}/ModusToolbox/tools_${MTB_VERSION}
 
 # ModusToolbox is located locally in the repository during build
 # as it is not available through wget or a package manager
-COPY ModusToolbox_${MTB_PACKAGE_VERSION}-linux-install.tar.gz ${HOME}
+COPY ModusToolbox_${MTB_PACKAGE_VERSION}-linux-install.deb ${HOME}
 
-# Run all installation script for ModusToolbox
-RUN cd ${HOME} \
-    && tar -xf ModusToolbox_${MTB_PACKAGE_VERSION}-linux-install.tar.gz
+RUN apt install -y ${HOME}/ModusToolbox_${MTB_PACKAGE_VERSION}-linux-install.deb
 
-RUN cd ${MTB_TOOLS_DIR}/openocd/udev_rules \
-    && sh install_rules.sh 
-RUN cd ${MTB_TOOLS_DIR}/driver_media \
-    && sh install_rules.sh
-RUN cd ${MTB_TOOLS_DIR}/fw-loader/udev_rules \
-    && sh install_rules.sh
-RUN cd ${MTB_TOOLS_DIR}/modus-shell \
-    && sh postinstall
-RUN cd ${MTB_TOOLS_DIR} \
-    && bash idc_registration-3.0.0.bash
+RUN ln -s ln -s /opt/Tools/ModusToolbox/ ${HOME}
 
 # Add MTB gcc and project-creator tool to path
 ENV PATH "${MTB_TOOLS_DIR}/openocd/bin:${MTB_TOOLS_DIR}/library-manager:${MTB_TOOLS_DIR}/fw-loader/bin:${MTB_TOOLS_DIR}/gcc/bin:$PATH"
